@@ -1,6 +1,5 @@
 package org.example.app;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -92,8 +91,31 @@ public class UserInterface {
                     break;
                 case 8:
                     if (currentUser.isAdmin()) {
-                        System.out.println("Enter vehicle details: ");
-                        // nie gotowe :)
+                        System.out.println("Enter vehicle type (car/moto): ");
+                        String type = scanner.next().toLowerCase();
+                        System.out.println("Enter brand: ");
+                        String brand = scanner.next();
+                        System.out.println("Enter model: ");
+                        String model = scanner.next();
+                        System.out.println("Enter production year: ");
+                        int year = scanner.nextInt();
+                        System.out.println("Enter systemID: ");
+                        int systemID = scanner.nextInt();
+                        System.out.println("Enter rental price per day: ");
+                        float price = scanner.nextFloat();
+                        if (type.equals("car")) {
+                            Car newCar = new Car(brand, model, year, systemID, price, false);
+                            repo.addVehicle(newCar);
+                            System.out.println("Car added successfully.");
+                        } else if (type.equals("moto")) {
+                            System.out.println("Enter motorcycle type: ");
+                            String motoType = scanner.next();
+                            Motorcycle newMoto = new Motorcycle(brand, model, motoType, year, systemID, price, false);
+                            repo.addVehicle(newMoto);
+                            System.out.println("Motorcycle added successfully.");
+                        } else {
+                            System.out.println("Invalid vehicle type!");
+                        }
                     } else {
                         System.out.println("Invalid choice!");
                     }
