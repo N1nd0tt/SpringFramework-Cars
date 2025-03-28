@@ -12,4 +12,8 @@ public class Rental {
     private String userId;
     private String rentDateTime;
     private String returnDateTime;
+
+    public boolean isActive() {
+        return returnDateTime == null || returnDateTime.isBlank();
+    }
 }

@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class RentalJsonRepository implements IRentalRepository {
     private final JsonFileStorage<Rental> storage =
-            new JsonFileStorage<>("users.json", new TypeToken<List<Rental>>(){}.getType());
+            new JsonFileStorage<>("rentals.json", new TypeToken<List<Rental>>(){}.getType());
     private final List<Rental> rentals;
 
     public RentalJsonRepository() {
@@ -30,9 +31,20 @@ public class RentalJsonRepository implements IRentalRepository {
     }
     @Override
     public Optional<Rental> findByVehId(String vehId) {
+        if (rentals == null || rentals.isEmpty()) {
+            return Optional.empty();
+        }
         return rentals.stream().filter(v ->
                 v.getVehicleId().equals(vehId)).findFirst();
     }
+
+    public List<String> getRentedVehicleIds() {
+        return rentals.stream()
+                .filter(Rental::isActive)
+                .map(Rental::getVehicleId)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public Rental save(Rental user) {
         if (user.getId() == null ||
