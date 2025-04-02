@@ -1,34 +1,34 @@
 package org.example.app;
 
 import org.example.models.Rental;
-import org.example.repositories.impl.RentalJsonRepository;
 import org.example.services.AuthService;
 import org.example.models.User;
 import org.example.models.Vehicle;
-import org.example.repositories.impl.VehicleJsonRepository;
-import org.example.repositories.impl.UserJsonRepository;
+import org.example.services.RentalService;
+import org.example.services.VehicleService;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class UserInterface {
-    private static final VehicleJsonRepository repo = new VehicleJsonRepository();
-    private static final UserJsonRepository userJsonRepository = new UserJsonRepository();
-    private static final RentalJsonRepository rentalJsonRepository = new RentalJsonRepository();
-    private static final AuthService authService = new AuthService(userJsonRepository);
-    private static final Scanner scanner = new Scanner(System.in);
-    private static User currentUser;
+public class App {
+    private final AuthService authService;
+    private final VehicleService vehicleService;
+    private final RentalService rentalService;
+    private final Scanner scanner = new Scanner(System.in);
+    private User currentUser;
 
-    public static void main(String[] args) {
-        try {
-            authenticateUser();
-            displayMenu();
-        } finally {
-            scanner.close();
-        }
+    public App(AuthService authService, VehicleService vehicleService, RentalService rentalService) {
+        this.authService = authService;
+        this.vehicleService = vehicleService;
+        this.rentalService = rentalService;
     }
 
-    private static void authenticateUser() {
+    public void run(){
+        authenticateUser();
+        displayMenu();
+    }
+
+    private void authenticateUser() {
         while (true) {
             System.out.println("1. Login \n2. Register");
             int choice = scanner.nextInt();
@@ -58,7 +58,7 @@ public class UserInterface {
         }
     }
 
-    private static void displayMenu() {
+    private void displayMenu() {
         while (true) {
             System.out.println("Choose an option: 1 - get free vehicles, 2 - rent a vehicle, 3 - return a vehicle, 4 - get user info, 5 - exit");
             if (currentUser.getRole().equals("ADMIN")) {
@@ -67,8 +67,8 @@ public class UserInterface {
             int choice = scanner.nextInt();
             switch (choice) {
                 case 1:
-                    List<String> rentedIds = rentalJsonRepository.getRentedVehicleIds();
-                    List<Vehicle> freeVehicles = repo.findAll().stream()
+                    List<String> rentedIds = vehicleService.getRentedVehicleIds();
+                    List<Vehicle> freeVehicles = vehicleService.getAllVehicle().stream()
                             .filter(v -> !rentedIds.contains(v.getId()))
                             .collect(Collectors.toList());
 
@@ -80,16 +80,16 @@ public class UserInterface {
                 case 2:
                     System.out.println("Provide ID of vehicle you want to rent:");
                     String rentID = scanner.next();
-                    Optional<Vehicle> vehicle = repo.findById(rentID);
+                    Optional<Vehicle> vehicle = vehicleService.getVehicleById(rentID);
 
-                    if (vehicle.isPresent() && rentalJsonRepository.findByVehId(rentID).isEmpty()) {
+                    if (vehicle.isPresent() && rentalService.findByVehicleId(rentID).isEmpty()) {
                         Rental newRental = Rental.builder()
                                 .vehicleId(rentID)
                                 .userId(currentUser.getId())
                                 .rentDateTime(String.valueOf(System.currentTimeMillis()))
                                 .build();
 
-                        rentalJsonRepository.save(newRental);
+                        rentalService.saveRental(newRental);
                         System.out.println("Successfully rented a vehicle!");
                     } else {
                         System.out.println("Vehicle is rented or don`t exist");
@@ -99,19 +99,19 @@ public class UserInterface {
                     System.out.println("Type in return vehicle ID:");
                     String returnID = scanner.next();
 
-                    Optional<Rental> rental = rentalJsonRepository.findByVehId(returnID);
+                    Optional<Rental> rental = rentalService.findByVehicleId(returnID);
 
                     if (rental.isPresent()) {
                         Rental updatedRental = rental.get();
                         updatedRental.setReturnDateTime(String.valueOf(System.currentTimeMillis()));
-                        rentalJsonRepository.save(updatedRental);
+                        rentalService.saveRental(updatedRental);
                         System.out.println("Vehicle is successfully returned!");
                     } else {
                         System.out.println("Vehicle is not rented by you or don`t exist.");
                     }
                     break;
                 case 4:
-                    System.out.println(userJsonRepository.findById(currentUser.getId()));
+                    System.out.println(authService.getUserRepository().findById(currentUser.getId()));
                     break;
                 case 5:
                     System.out.println("Saving data...");
@@ -119,8 +119,8 @@ public class UserInterface {
                     return;
                 case 6:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        List<String> rentedIds2 = rentalJsonRepository.getRentedVehicleIds();
-                        List<Vehicle> allVehicles = repo.findAll();
+                        List<String> rentedIds2 = vehicleService.getRentedVehicleIds();
+                        List<Vehicle> allVehicles = vehicleService.getAllVehicle();
 
                         System.out.println("All vehicles:");
                         for (Vehicle v : allVehicles) {
@@ -133,7 +133,7 @@ public class UserInterface {
                     break;
                 case 7:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        List<User> userList = userJsonRepository.findAll();
+                        List<User> userList = authService.getUserRepository().findAll();
                         System.out.println("Users in repo:");
                         for (User u : userList) {
                             System.out.println(u);
@@ -168,7 +168,7 @@ public class UserInterface {
                         if (!attributes.isBlank()) {
                             parseAndAddAttributes(newVehicle, attributes);
                         }
-                        repo.save(newVehicle);
+                        vehicleService.saveVehicle(newVehicle);
                         System.out.println("Vehicle added successfully.");
                     } else {
                         System.out.println("Invalid choice!");
@@ -178,7 +178,7 @@ public class UserInterface {
                     if (currentUser.getRole().equals("ADMIN")) {
                         System.out.println("Enter ID of vehicle to remove: ");
                         String removeID = scanner.next();
-                        repo.deleteById(removeID);
+                        vehicleService.deleteVehicleByID(removeID);
                     } else {
                         System.out.println("Invalid choice!");
                     }

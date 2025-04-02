@@ -1,13 +1,11 @@
-package org.example.repositories.impl;
+package org.example.repositories.impl.json;
 
 import com.google.gson.reflect.TypeToken;
 import org.example.models.Rental;
 import org.example.repositories.IRentalRepository;
 import org.example.utils.JsonFileStorage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RentalJsonRepository implements IRentalRepository {
@@ -36,13 +34,6 @@ public class RentalJsonRepository implements IRentalRepository {
         }
         return rentals.stream().filter(v ->
                 v.getVehicleId().equals(vehId)).findFirst();
-    }
-
-    public List<String> getRentedVehicleIds() {
-        return rentals.stream()
-                .filter(Rental::isActive)
-                .map(Rental::getVehicleId)
-                .collect(Collectors.toList());
     }
 
     @Override

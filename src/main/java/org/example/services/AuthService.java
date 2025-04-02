@@ -1,23 +1,24 @@
 package org.example.services;
 
+import lombok.Getter;
 import org.example.models.User;
-import org.example.repositories.impl.UserJsonRepository;
+import org.example.repositories.IUserRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.mindrot.jbcrypt.BCrypt.*;
 
+@Getter
 public class AuthService {
-    private UserJsonRepository userJsonRepository;
+    private final IUserRepository userRepository;
 
-    public AuthService(UserJsonRepository userJsonRepository) {
-        this.userJsonRepository = userJsonRepository;
+    public AuthService(IUserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    //Login add hash
     public Optional<User> login(String login, String password) {
-        List<User> users = userJsonRepository.findAll();
+        List<User> users = userRepository.findAll();
         for (User user : users) {
             if (user.getLogin().equals(login) && checkpw(password, user.getPassword())) {
                 return Optional.of(user);
@@ -27,7 +28,7 @@ public class AuthService {
     }
 
     public boolean register(String login, String password) {
-        List<User> users = userJsonRepository.findAll();
+        List<User> users = userRepository.findAll();
         for (User user : users) {
             if (user.getLogin().equals(login)) {
                 return false;
@@ -39,7 +40,7 @@ public class AuthService {
                 .password(hashpw(password, gensalt()))
                 .role("USER")
                 .build();
-        userJsonRepository.save(newUser);
+        userRepository.save(newUser);
         return true;
     }
 }

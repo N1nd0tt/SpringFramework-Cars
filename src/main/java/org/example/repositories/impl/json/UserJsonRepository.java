@@ -1,14 +1,10 @@
-package org.example.repositories.impl;
+package org.example.repositories.impl.json;
 
 import com.google.gson.reflect.TypeToken;
 import org.example.models.User;
-import org.example.models.Vehicle;
 import org.example.repositories.IUserRepository;
 import org.example.utils.JsonFileStorage;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 
 public class UserJsonRepository implements IUserRepository {

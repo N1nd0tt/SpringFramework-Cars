@@ -23,6 +23,7 @@ public class Vehicle {
     public Object getAttribute(String key) {
         return attributes.get(key);
     }
+
     public void addAttribute(String key,
                              Object value) {
         attributes.put(key, value);
