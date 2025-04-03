@@ -83,7 +83,7 @@ public class VehicleJdbcRepository implements IVehicleRepository {
             deleteById(vehicle.getId());
         }
 
-        String sql = "INSERT INTO vehicle (id, category, brand, model, year, plate, price, attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)";
+        String sql = "INSERT INTO vehicle (id, category, brand, model, year, price, attributes) VALUES (?, ?, ?, ?, ?, ?, ?::jsonb)";
         try (Connection connection = JdbcConnectionManager.getInstance().getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -92,8 +92,8 @@ public class VehicleJdbcRepository implements IVehicleRepository {
             stmt.setString(3, vehicle.getBrand());
             stmt.setString(4, vehicle.getModel());
             stmt.setInt(5, vehicle.getYear());
-            stmt.setDouble(7, vehicle.getPrice());
-            stmt.setString(8, gson.toJson(vehicle.getAttributes()));
+            stmt.setDouble(6, vehicle.getPrice());
+            stmt.setString(7, gson.toJson(vehicle.getAttributes()));
 
             stmt.executeUpdate();
         } catch (SQLException e) {

@@ -13,6 +13,8 @@ import org.example.services.AuthService;
 import org.example.services.RentalService;
 import org.example.services.VehicleService;
 
+import java.util.Arrays;
+
 
 public class Main {
     public static void main(String[] args) {

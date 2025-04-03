@@ -67,12 +67,8 @@ public class App {
             int choice = scanner.nextInt();
             switch (choice) {
                 case 1:
-                    List<String> rentedIds = vehicleService.getRentedVehicleIds();
-                    List<Vehicle> freeVehicles = vehicleService.getAllVehicle().stream()
-                            .filter(v -> !rentedIds.contains(v.getId()))
-                            .collect(Collectors.toList());
-
                     System.out.println("Free vehicles:");
+                    List<Vehicle> freeVehicles = vehicleService.getAvailableVehicles();
                     for (Vehicle v : freeVehicles) {
                         System.out.println(v);
                     }
@@ -82,7 +78,7 @@ public class App {
                     String rentID = scanner.next();
                     Optional<Vehicle> vehicle = vehicleService.getVehicleById(rentID);
 
-                    if (vehicle.isPresent() && rentalService.findByVehicleId(rentID).isEmpty()) {
+                    if (vehicle.isPresent() && vehicleService.getAvailableVehicles().contains(vehicle.get())) {
                         Rental newRental = Rental.builder()
                                 .vehicleId(rentID)
                                 .userId(currentUser.getId())

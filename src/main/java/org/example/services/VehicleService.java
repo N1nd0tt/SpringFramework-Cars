@@ -21,11 +21,17 @@ public class VehicleService {
 
     public List<String> getRentedVehicleIds() {
         return rentalRepo.findAll().stream()
-                .filter(Rental::isActive)
+                .filter(rental -> rental.getRentDateTime() != null && rental.getReturnDateTime() == null)
                 .map(Rental::getVehicleId)
                 .collect(Collectors.toList());
     }
 
+    public List<Vehicle> getAvailableVehicles() {
+        List<String> rentedVehicleIds = getRentedVehicleIds();
+        return vehicleRepo.findAll().stream()
+                .filter(vehicle -> !rentedVehicleIds.contains(vehicle.getId()))
+                .collect(Collectors.toList());
+    }
     public List<Vehicle> getAllVehicle(){
         return vehicleRepo.findAll();
     }

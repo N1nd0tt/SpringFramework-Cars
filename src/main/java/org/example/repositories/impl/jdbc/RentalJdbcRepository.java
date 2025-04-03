@@ -94,23 +94,31 @@ public class RentalJdbcRepository implements IRentalRepository {
     public Rental save(Rental rental) {
         if (rental.getId() == null || rental.getId().isBlank()) {
             rental.setId(UUID.randomUUID().toString());
+            String sql = "INSERT INTO rental (id, vehicle_id, user_id, rent_date, return_date) VALUES (?, ?, ?, ?, ?)";
+            try (Connection connection = JdbcConnectionManager.getInstance().getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, rental.getId());
+                stmt.setString(2, rental.getVehicleId());
+                stmt.setString(3, rental.getUserId());
+                stmt.setString(4, rental.getRentDateTime());
+                stmt.setString(5, rental.getReturnDateTime());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error occurred while saving rental", e);
+            }
         } else {
-            deleteById(rental.getId());
-        }
-
-        String sql = "INSERT INTO rental (id, vehicle_id, user_id, rent_date, return_date) VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = JdbcConnectionManager.getInstance().getConnection();
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, rental.getId());
-            stmt.setString(2, rental.getVehicleId());
-            stmt.setString(3, rental.getUserId());
-            stmt.setString(4, rental.getRentDateTime());
-            stmt.setString(5, rental.getReturnDateTime());
-
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error occurred while saving vehicle", e);
+            String sql = "UPDATE rental SET vehicle_id = ?, user_id = ?, rent_date = ?, return_date = ? WHERE id = ?";
+            try (Connection connection = JdbcConnectionManager.getInstance().getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, rental.getVehicleId());
+                stmt.setString(2, rental.getUserId());
+                stmt.setString(3, rental.getRentDateTime());
+                stmt.setString(4, rental.getReturnDateTime());
+                stmt.setString(5, rental.getId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error occurred while updating rental", e);
+            }
         }
         return rental;
     }
