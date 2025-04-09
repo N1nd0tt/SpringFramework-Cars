@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.services.impl;
 
 import org.example.models.Rental;
 import org.example.repositories.IRentalRepository;
@@ -13,7 +13,7 @@ public class RentalService {
     }
 
     public Optional<Rental> findByVehicleId(String id){
-        return rentalRepo.findByVehId(id);
+        return rentalRepo.findByVehicleIdAndReturnDateIsNull(id);
     }
     public Rental saveRental(Rental rental){
         return rentalRepo.save(rental);

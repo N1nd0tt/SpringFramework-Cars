@@ -1,6 +1,5 @@
-package org.example.services;
+package org.example.services.impl;
 
-import lombok.Getter;
 import org.example.models.Rental;
 import org.example.models.Vehicle;
 import org.example.repositories.IRentalRepository;
@@ -21,8 +20,8 @@ public class VehicleService {
 
     public List<String> getRentedVehicleIds() {
         return rentalRepo.findAll().stream()
-                .filter(rental -> rental.getRentDateTime() != null && rental.getReturnDateTime() == null)
-                .map(Rental::getVehicleId)
+                .filter(rental -> rental.getRentDate() != null && rental.getReturnDate() == null)
+                .map(Rental::getId) //fake, was getVehicleID
                 .collect(Collectors.toList());
     }
 

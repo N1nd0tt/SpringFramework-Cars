@@ -1,14 +1,13 @@
 package org.example.app;
 
 import org.example.models.Rental;
-import org.example.services.AuthService;
+import org.example.services.impl.AuthService;
 import org.example.models.User;
 import org.example.models.Vehicle;
-import org.example.services.RentalService;
-import org.example.services.VehicleService;
+import org.example.services.impl.RentalService;
+import org.example.services.impl.VehicleService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class App {
     private final AuthService authService;
@@ -49,7 +48,9 @@ public class App {
                 String login = scanner.next();
                 System.out.println("Enter password: ");
                 String password = scanner.next();
-                if (authService.register(login, password)) {
+                System.out.println("Enter role (ADMIN/USER): ");
+                String role = scanner.next();
+                if (authService.register(login, password, role)) {
                     System.out.println("Successfully registered! Try to login now.");
                 } else {
                     System.out.println("Failed to register.");

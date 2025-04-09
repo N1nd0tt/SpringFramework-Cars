@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface IRentalRepository {
     List<Rental> findAll();
     Optional<Rental> findById(String id);
-    Optional<Rental> findByVehId(String id);
     Rental save(Rental rental);
     void deleteById(String id);
+    Optional<Rental> findByVehicleIdAndReturnDateIsNull(String vehicleId);
 }

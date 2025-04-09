@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.services.impl;
 
 import lombok.Getter;
 import org.example.models.User;
@@ -27,7 +27,7 @@ public class AuthService {
         return Optional.empty();
     }
 
-    public boolean register(String login, String password) {
+    public boolean register(String login, String password, String role) {
         List<User> users = userRepository.findAll();
         for (User user : users) {
             if (user.getLogin().equals(login)) {
@@ -38,11 +38,9 @@ public class AuthService {
                 .id(null)
                 .login(login)
                 .password(hashpw(password, gensalt()))
-                .role("USER")
+                .role(role)
                 .build();
         userRepository.save(newUser);
         return true;
     }
-
-
 }

@@ -9,11 +9,9 @@ import org.example.repositories.impl.jdbc.VehicleJdbcRepository;
 import org.example.repositories.impl.json.RentalJsonRepository;
 import org.example.repositories.impl.json.UserJsonRepository;
 import org.example.repositories.impl.json.VehicleJsonRepository;
-import org.example.services.AuthService;
-import org.example.services.RentalService;
-import org.example.services.VehicleService;
-
-import java.util.Arrays;
+import org.example.services.impl.AuthService;
+import org.example.services.impl.RentalService;
+import org.example.services.impl.VehicleService;
 
 
 public class Main {
