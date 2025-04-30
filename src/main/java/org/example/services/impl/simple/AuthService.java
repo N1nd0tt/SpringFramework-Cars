@@ -1,8 +1,9 @@
-package org.example.services.impl;
+package org.example.services.impl.simple;
 
 import lombok.Getter;
 import org.example.models.User;
 import org.example.repositories.IUserRepository;
+import org.example.services.IAuthService;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import java.util.Optional;
 import static org.mindrot.jbcrypt.BCrypt.*;
 
 @Getter
-public class AuthService {
+public class AuthService implements IAuthService {
     private final IUserRepository userRepository;
 
     public AuthService(IUserRepository userRepository) {
@@ -42,5 +43,8 @@ public class AuthService {
                 .build();
         userRepository.save(newUser);
         return true;
+    }
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
     }
 }

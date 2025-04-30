@@ -1,22 +1,21 @@
 package org.example.app;
 
 import org.example.models.Rental;
-import org.example.services.impl.AuthService;
+import org.example.services.IAuthService;
+import org.example.services.IRentalService;
+import org.example.services.IVehicleService;
 import org.example.models.User;
 import org.example.models.Vehicle;
-import org.example.services.impl.RentalService;
-import org.example.services.impl.VehicleService;
-
 import java.util.*;
 
 public class App {
-    private final AuthService authService;
-    private final VehicleService vehicleService;
-    private final RentalService rentalService;
+    private final IAuthService authService;
+    private final IVehicleService vehicleService;
+    private final IRentalService rentalService;
     private final Scanner scanner = new Scanner(System.in);
     private User currentUser;
 
-    public App(AuthService authService, VehicleService vehicleService, RentalService rentalService) {
+    public App(IAuthService authService, IVehicleService vehicleService, IRentalService rentalService) {
         this.authService = authService;
         this.vehicleService = vehicleService;
         this.rentalService = rentalService;
@@ -69,7 +68,7 @@ public class App {
             switch (choice) {
                 case 1:
                     System.out.println("Free vehicles:");
-                    List<Vehicle> freeVehicles = vehicleService.getAvailableVehicles();
+                    List<Vehicle> freeVehicles = vehicleService.findAvailableVehicles();
                     for (Vehicle v : freeVehicles) {
                         System.out.println(v);
                     }
@@ -77,38 +76,24 @@ public class App {
                 case 2:
                     System.out.println("Provide ID of vehicle you want to rent:");
                     String rentID = scanner.next();
-                    Optional<Vehicle> vehicle = vehicleService.getVehicleById(rentID);
-
-                    if (vehicle.isPresent() && vehicleService.getAvailableVehicles().contains(vehicle.get())) {
-                        Rental newRental = Rental.builder()
-                                .vehicleId(rentID)
-                                .userId(currentUser.getId())
-                                .rentDateTime(String.valueOf(System.currentTimeMillis()))
-                                .build();
-
-                        rentalService.saveRental(newRental);
-                        System.out.println("Successfully rented a vehicle!");
+                    if (vehicleService.isAvailable(rentID)) {
+                        Rental newRental = rentalService.rent(rentID, currentUser.getId());
+                        System.out.println("Successfully rented a vehicle: " + newRental);
                     } else {
-                        System.out.println("Vehicle is rented or don`t exist");
+                        System.out.println("Vehicle is rented or does not exist.");
                     }
                     break;
                 case 3:
                     System.out.println("Type in return vehicle ID:");
                     String returnID = scanner.next();
-
-                    Optional<Rental> rental = rentalService.findByVehicleId(returnID);
-
-                    if (rental.isPresent()) {
-                        Rental updatedRental = rental.get();
-                        updatedRental.setReturnDateTime(String.valueOf(System.currentTimeMillis()));
-                        rentalService.saveRental(updatedRental);
+                    if (rentalService.returnRental(returnID, currentUser.getId())) {
                         System.out.println("Vehicle is successfully returned!");
                     } else {
-                        System.out.println("Vehicle is not rented by you or don`t exist.");
+                        System.out.println("Vehicle is not rented by you or does not exist.");
                     }
                     break;
                 case 4:
-                    System.out.println(authService.getUserRepository().findById(currentUser.getId()));
+                    System.out.println(currentUser);
                     break;
                 case 5:
                     System.out.println("Saving data...");
@@ -116,56 +101,61 @@ public class App {
                     return;
                 case 6:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        List<String> rentedIds2 = vehicleService.getRentedVehicleIds();
-                        List<Vehicle> allVehicles = vehicleService.getAllVehicle();
-
-                        System.out.println("All vehicles:");
-                        for (Vehicle v : allVehicles) {
-                            String status = rentedIds2.contains(v.getId()) ? " (Rented)" : " (Free)";
-                            System.out.println(v + status);
-                        }
+                        List<Vehicle> allVehicles = vehicleService.findAll();
+                        allVehicles.forEach(System.out::println);
                     } else {
                         System.out.println("Invalid choice!");
                     }
                     break;
                 case 7:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        List<User> userList = authService.getUserRepository().findAll();
-                        System.out.println("Users in repo:");
-                        for (User u : userList) {
-                            System.out.println(u);
-                        }
+                        List<User> users = authService.findAllUsers();
+                        users.forEach(System.out::println);
                     } else {
                         System.out.println("Invalid choice!");
                     }
                     break;
                 case 8:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        System.out.println("Enter vehicle type (car/moto): ");
-                        String type = scanner.next().toLowerCase();
-                        System.out.println("Enter brand: ");
+                        System.out.println("Enter vehicle details:");
+                        System.out.println("Type: ");
+                        String type = scanner.next();
+                        System.out.println("Brand: ");
                         String brand = scanner.next();
-                        System.out.println("Enter model: ");
+                        System.out.println("Model: ");
                         String model = scanner.next();
-                        System.out.println("Enter production year: ");
+                        System.out.println("Year: ");
                         int year = scanner.nextInt();
-                        System.out.println("Enter rental price per day: ");
-                        float price = scanner.nextFloat();
-                        scanner.nextLine();
-                        Vehicle newVehicle = Vehicle.builder()
-                                .id(null)
-                                .category(type)
-                                .brand(brand)
-                                .model(model)
-                                .year(year)
-                                .price(price)
-                                .build();
-                        System.out.println("Enter attributes of vehicle (key=value,key=value), or press Enter to skip:");
-                        String attributes = scanner.nextLine();
-                        if (!attributes.isBlank()) {
-                            parseAndAddAttributes(newVehicle, attributes);
+                        System.out.println("Price: ");
+                        double price = scanner.nextDouble();
+                        System.out.println("Do you want add attributes? (yes/no)");
+                        String addAttributes = scanner.next();
+                        if (addAttributes.equalsIgnoreCase("yes")) {
+                            System.out.println("Enter attributes (key=value, separated by commas): ");
+                            String attributesInput = scanner.next();
+                            Vehicle newVehicle = Vehicle.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .category(type)
+                                    .brand(brand)
+                                    .model(model)
+                                    .year(year)
+                                    .price(price)
+                                    .build();
+                            parseAndAddAttributes(newVehicle, attributesInput);
+                            vehicleService.save(newVehicle);
+                            System.out.println("Vehicle added successfully.");
+                        } else {
+                            Vehicle newVehicle = Vehicle.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .category(type)
+                                    .brand(brand)
+                                    .model(model)
+                                    .year(year)
+                                    .price(price)
+                                    .build();
+                            vehicleService.save(newVehicle);
+                            System.out.println("Vehicle added successfully.");
                         }
-                        vehicleService.saveVehicle(newVehicle);
                         System.out.println("Vehicle added successfully.");
                     } else {
                         System.out.println("Invalid choice!");
@@ -173,9 +163,10 @@ public class App {
                     break;
                 case 9:
                     if (currentUser.getRole().equals("ADMIN")) {
-                        System.out.println("Enter ID of vehicle to remove: ");
+                        System.out.println("Enter ID of vehicle to remove:");
                         String removeID = scanner.next();
-                        vehicleService.deleteVehicleByID(removeID);
+                        vehicleService.deleteById(removeID);
+                        System.out.println("Vehicle removed successfully.");
                     } else {
                         System.out.println("Invalid choice!");
                     }

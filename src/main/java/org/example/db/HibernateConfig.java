@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.example.db;
 import org.example.models.Rental;
 import org.example.models.User;
 import org.example.models.Vehicle;

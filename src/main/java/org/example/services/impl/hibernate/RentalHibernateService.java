@@ -1,4 +1,4 @@
-package org.example.services.impl;
+package org.example.services.impl.hibernate;
 
 import org.example.models.Rental;
 import org.example.models.User;
@@ -7,22 +7,21 @@ import org.example.repositories.impl.hibernate.RentalHibernateRepository;
 import org.example.repositories.impl.hibernate.UserHibernateRepository;
 import org.example.repositories.impl.hibernate.VehicleHibernateRepository;
 import org.example.services.IRentalService;
-import org.example.utils.HibernateConfig;
+import org.example.db.HibernateConfig;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class RentalHibernateService implements IRentalService {
     private final RentalHibernateRepository rentalRepo;
     private final VehicleHibernateRepository vehicleRepo;
     private final UserHibernateRepository userRepo;
 
-    public RentalHibernateService(RentalHibernateRepository rentalRepo, VehicleHibernateRepository vehicleRepo,
-                                  UserHibernateRepository userRepo) {
+    public RentalHibernateService(RentalHibernateRepository rentalRepo,
+                                  UserHibernateRepository userRepo, VehicleHibernateRepository vehicleRepo) {
         this.rentalRepo = rentalRepo;
         this.vehicleRepo = vehicleRepo;
         this.userRepo = userRepo;
@@ -42,8 +41,8 @@ public class RentalHibernateService implements IRentalService {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
             rentalRepo.setSession(session);
-            //vehicleRepo.setSession(session);
-            //userRepo.setSession(session);
+            vehicleRepo.setSession(session);
+            userRepo.setSession(session);
             if (rentalRepo.findByVehicleIdAndReturnDateIsNull(vehicleId).isPresent()) {
                 throw new IllegalStateException("Vehicle is rented");
             }
@@ -68,8 +67,30 @@ public class RentalHibernateService implements IRentalService {
         }
     }
     @Override
-    public boolean returnRental(String vehicleId, String userId){
-        return findAll().stream().anyMatch(rental -> rental.getVehicle().getId().equals(vehicleId) && rental.getUser().getId().equals(userId));
+    public boolean returnRental(String vehicleId, String userId) {
+        Transaction tx = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            rentalRepo.setSession(session);
+
+            Optional<Rental> rental = rentalRepo.findByVehicleIdAndReturnDateIsNull(vehicleId);
+            if (rental.isPresent()) {
+                Rental existingRental = rental.get();
+                if (!existingRental.getUser().getId().equals(userId)) {
+                    throw new IllegalArgumentException("User ID does not match the rental record.");
+                }
+                existingRental.setReturnDate(LocalDateTime.now().toString());
+                rentalRepo.save(existingRental);
+                tx.commit();
+                return true;
+            }
+            throw new IllegalArgumentException("No active rental found for vehicle ID: " + vehicleId);
+        } catch (Exception e) {
+            if (tx != null && tx.isActive()) {
+                tx.rollback();
+            }
+            throw e;
+        }
     }
 
     @Override

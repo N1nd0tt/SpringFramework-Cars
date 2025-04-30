@@ -2,6 +2,8 @@ package org.example.repositories.impl.json;
 
 import com.google.gson.reflect.TypeToken;
 import org.example.models.Rental;
+import org.example.models.User;
+import org.example.models.Vehicle;
 import org.example.repositories.IRentalRepository;
 import org.example.utils.JsonFileStorage;
 
@@ -14,9 +16,9 @@ public class RentalJsonRepository implements IRentalRepository {
     private final List<Rental> rentals;
 
     public RentalJsonRepository() {
-        this.rentals = new
-                ArrayList<>(storage.load());
+        this.rentals = new ArrayList<>(storage.load());
     }
+
     @Override
     public List<Rental> findAll() {
         return new ArrayList<>(rentals);
@@ -24,33 +26,31 @@ public class RentalJsonRepository implements IRentalRepository {
 
     @Override
     public Optional<Rental> findById(String id) {
-        return rentals.stream().filter(v ->
-                v.getId().equals(id)).findFirst();
-    }
-    @Override
-    public Optional<Rental> findByVehId(String vehId) {
-        if (rentals == null || rentals.isEmpty()) {
-            return Optional.empty();
-        }
-        return rentals.stream().filter(v ->
-                v.getVehicleId().equals(vehId)).findFirst();
+        return rentals.stream().filter(r -> r.getId().equals(id)).findFirst();
     }
 
     @Override
-    public Rental save(Rental user) {
-        if (user.getId() == null ||
-                user.getId().isBlank()) {
-            user.setId(UUID.randomUUID().toString());
-        } else {
-            deleteById(user.getId());
-        }
-        rentals.add(user);
-        storage.save(rentals);
-        return user;
+    public Optional<Rental> findByVehicleIdAndReturnDateIsNull(String vehicleId) {
+        return rentals.stream()
+                .filter(r -> r.getVehicle() != null && r.getVehicle().getId().equals(vehicleId) && r.getReturnDate() == null)
+                .findFirst();
     }
+
+    @Override
+    public Rental save(Rental rental) {
+        if (rental.getId() == null || rental.getId().isBlank()) {
+            rental.setId(UUID.randomUUID().toString());
+        } else {
+            deleteById(rental.getId());
+        }
+        rentals.add(rental);
+        storage.save(rentals);
+        return rental;
+    }
+
     @Override
     public void deleteById(String id) {
-        rentals.removeIf(v -> v.getId().equals(id));
+        rentals.removeIf(r -> r.getId().equals(id));
         storage.save(rentals);
     }
 }

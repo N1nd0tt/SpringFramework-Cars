@@ -10,4 +10,5 @@ public interface IVehicleService {
     Vehicle save(Vehicle vehicle);
     List<Vehicle> findAvailableVehicles();
     boolean isAvailable(String vehicleId);
+    void deleteById(String ID);
 }

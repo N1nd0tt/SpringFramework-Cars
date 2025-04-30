@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
 public class Rental {
     @Id
     @Column(nullable = false, unique = true)
